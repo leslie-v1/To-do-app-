@@ -1,7 +1,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import db from "../db.js";
+import prisma from "../prismaClient.js";
 
 const router = express.Router();
 
@@ -12,19 +12,23 @@ router.post("/register", async (req, res) => {
 
   try {
     const hashedPassword = bcrypt.hashSync(password, 8);
-    const result = await db.run(
-      "INSERT INTO users (username, password) VALUES (?, ?)",
-      username,
-      hashedPassword
-    );
 
-    const userId = result.lastID;
-    await db.run("INSERT INTO todos (user_id, task) VALUES (?, ?)", userId, "Hello :) add your first todo!");
+    const user = await prisma.user.create({
+  data: {
+    username,
+    password: hashedPassword
+  },
+
+  
+})
+
+
+    // Generate JWT token
 
     const secret = process.env.JWT_SECRET;
     if (!secret) return res.status(500).json({ error: "Server not configured (JWT_SECRET missing)" });
 
-    const token = jwt.sign({ id: userId }, secret, { expiresIn: "24h" });
+    const token = jwt.sign({ id:user.id }, secret, { expiresIn: "24h" });
     return res.status(201).json({ auth: true, token });
   } catch (error) {
     if (error?.message?.includes("UNIQUE")) {
@@ -41,7 +45,11 @@ router.post("/login", async (req, res) => {
   if (!username || !password) return res.status(400).json({ error: "username and password required" });
 
   try {
-    const user = await db.get("SELECT id, username, password FROM users WHERE username = ?", username);
+    const user = await prisma.user.findUnique({
+  where: {
+    username: username,
+  },
+})
     if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
     const passwordMatches = bcrypt.compareSync(password, user.password);

@@ -5,6 +5,7 @@ import authRoutes from './routes/authroute.js';
 import todoRoutes from './routes/todoRoutes.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import authMiddleware from '../src/middleware/authmiddleware.js';    
 dotenv.config();
 
 const app = express();
@@ -24,7 +25,7 @@ app.get('/', (req, res) => {
 
 //routes
 app.use('/auth', authRoutes);
-app.use('/todos', todoRoutes);
+app.use('/todos',authMiddleware ,todoRoutes);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
