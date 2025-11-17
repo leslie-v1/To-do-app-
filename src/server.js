@@ -5,7 +5,7 @@ import authRoutes from './routes/authroute.js';
 import todoRoutes from './routes/todoRoutes.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import authMiddleware from '../src/middleware/authmiddleware.js';    
+import authMiddleware from './middleware/authmiddleware.js';    
 dotenv.config();
 
 const app = express();
@@ -14,6 +14,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }))
+
 // serve the public directory
 app.use(express.static(path.join(__dirname, '../public')));
 
